@@ -24,7 +24,9 @@ if config.config_file_name is not None:
 # Set sqlalchemy.url from environment variable
 database_url = os.getenv("DATABASE_URL")
 if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+    # Escape % symbols to prevent configparser interpolation errors
+    database_url_escaped = database_url.replace("%", "%%")
+    config.set_main_option("sqlalchemy.url", database_url_escaped)
 
 # Import your models here for 'autogenerate' support
 # This imports Base and all models so Alembic can detect schema changes
