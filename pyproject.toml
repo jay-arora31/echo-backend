@@ -1,0 +1,56 @@
+[project]
+name = "superbryn-backend"
+version = "0.1.0"
+description = "AI Voice Agent Backend - Appointment Booking System"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # FastAPI & Server
+    "fastapi[standard]>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "python-multipart>=0.0.6",
+    # Database
+    "sqlalchemy[asyncio]>=2.0.25",
+    "asyncpg>=0.29.0",
+    "alembic>=1.13.1",
+    # Validation & Settings
+    "pydantic>=2.5.3",
+    "pydantic-settings>=2.1.0",
+    "python-dotenv>=1.0.0",
+    # LiveKit Agents & Plugins
+    "livekit-agents>=1.0.0",
+    "livekit-plugins-openai>=1.0.0",
+    "livekit-plugins-deepgram>=1.0.0",
+    "livekit-plugins-cartesia>=1.0.0",
+    "livekit-plugins-silero>=1.0.0",
+    "livekit-plugins-bey>=0.1.0",
+    "livekit>=1.0.0",
+    # Utilities
+    "httpx>=0.26.0",
+    "python-dateutil>=2.8.2",
+    "logfire[fastapi,httpx]>=4.20.0",
+    "psycopg2-binary>=2.9.11",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.4",
+    "pytest-asyncio>=0.23.3",
+    "black>=24.1.0",
+    "ruff>=0.1.14",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]

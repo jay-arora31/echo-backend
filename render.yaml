@@ -1,0 +1,40 @@
+# Render Blueprint for SuperBryn Backend
+# Deploy using: https://dashboard.render.com/blueprints
+
+services:
+  - type: web
+    name: superbryn-backend
+    runtime: python
+    buildCommand: pip install uv && uv sync
+    startCommand: uv run start.py
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: superbryn-db
+          property: connectionString
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: CARTESIA_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: BEYOND_PRESENCE_API_KEY
+        sync: false
+      - key: BEYOND_PRESENCE_AVATAR_ID
+        sync: false
+      - key: LOGFIRE_TOKEN
+        sync: false
+      - key: APP_ENV
+        value: production
+
+databases:
+  - name: superbryn-db
+    databaseName: superbryn
+    user: superbryn
+    plan: free
