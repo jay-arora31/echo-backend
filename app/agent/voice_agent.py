@@ -108,6 +108,49 @@ def get_db():
         raise
 
 
+# Pricing constants for cost estimation (per API docs)
+PRICING = {
+    "deepgram_per_min": 0.0043,           # Nova-2 Pay-as-you-go
+    "cartesia_per_1k_chars": 0.099,       # Sonic TTS
+    "openai_input_per_1m": 0.15,          # GPT-4o-mini input
+    "openai_output_per_1m": 0.60,         # GPT-4o-mini output
+    "avatar_per_min": 0.03,               # Beyond Presence estimate
+}
+
+
+def calculate_call_cost(cost_tracking: dict) -> dict:
+    """Calculate estimated cost breakdown from usage metrics."""
+    stt_minutes = cost_tracking.get("stt_seconds", 0) / 60
+    tts_chars = cost_tracking.get("tts_characters", 0)
+    llm_input = cost_tracking.get("llm_input_tokens", 0)
+    llm_output = cost_tracking.get("llm_output_tokens", 0)
+    avatar_minutes = cost_tracking.get("avatar_seconds", 0) / 60
+    
+    stt_cost = stt_minutes * PRICING["deepgram_per_min"]
+    tts_cost = (tts_chars / 1000) * PRICING["cartesia_per_1k_chars"]
+    llm_input_cost = (llm_input / 1_000_000) * PRICING["openai_input_per_1m"]
+    llm_output_cost = (llm_output / 1_000_000) * PRICING["openai_output_per_1m"]
+    llm_cost = llm_input_cost + llm_output_cost
+    avatar_cost = avatar_minutes * PRICING["avatar_per_min"]
+    
+    total_cost = stt_cost + tts_cost + llm_cost + avatar_cost
+    
+    return {
+        "deepgram_stt": round(stt_cost, 6),
+        "cartesia_tts": round(tts_cost, 6),
+        "openai_llm": round(llm_cost, 6),
+        "beyond_presence_avatar": round(avatar_cost, 6),
+        "total": round(total_cost, 6),
+        "usage": {
+            "stt_minutes": round(stt_minutes, 2),
+            "tts_characters": tts_chars,
+            "llm_input_tokens": llm_input,
+            "llm_output_tokens": llm_output,
+            "avatar_minutes": round(avatar_minutes, 2),
+        }
+    }
+
+
 def get_upcoming_appointments_filter():
     """
     Returns filter conditions for upcoming appointments.
@@ -830,6 +873,15 @@ async def entrypoint(ctx: JobContext):
                 "preferred_times": [],
                 "preferred_days": [],
                 "notes": [],
+            },
+            # Cost tracking for usage estimation
+            "cost_tracking": {
+                "stt_seconds": 0.0,          # Deepgram speech-to-text duration
+                "tts_characters": 0,         # Cartesia text-to-speech characters
+                "llm_input_tokens": 0,       # OpenAI input tokens
+                "llm_output_tokens": 0,      # OpenAI output tokens
+                "avatar_seconds": 0.0,       # Beyond Presence avatar duration
+                "call_start_time": time_module.time(),  # For calculating total duration
             },
         }
         log_timing("Session initialized")
