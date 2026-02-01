@@ -60,7 +60,7 @@ def kill_port(port: int):
 
 def main():
     print("=" * 50)
-    print("Starting SuperBryn Voice Agent")
+    print("Starting Echo Voice Agent")
     print("=" * 50)
     print()
     

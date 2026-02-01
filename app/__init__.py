@@ -1,2 +1,2 @@
-# SuperBryn AI Voice Agent Backend
+# Echo AI Voice Agent Backend
 

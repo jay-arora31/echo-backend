@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 if settings.logfire_token:
     logfire.configure(
         token=settings.logfire_token,
-        service_name="superbryn-voice-agent",
+        service_name="Echo-voice-agent",
         environment=settings.app_env,
     )
 

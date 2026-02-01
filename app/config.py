@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # App
-    app_name: str = "SuperBryn Voice Agent"
+    app_name: str = "Echo Voice Agent"
     app_env: str = "development"
     debug: bool = True
 

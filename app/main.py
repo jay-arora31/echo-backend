@@ -11,7 +11,7 @@ from app.api import api_router
 if settings.logfire_token:
     logfire.configure(
         token=settings.logfire_token,
-        service_name="superbryn-voice-agent",
+        service_name="Echo-voice-agent",
         environment=settings.app_env,
         console=False,  # Disable console logging (too verbose)
     )
@@ -27,7 +27,7 @@ else:
 async def lifespan(app: FastAPI):
     """Application lifespan handler."""
     # Startup
-    print("🚀 Starting SuperBryn Voice Agent API...")
+    print("🚀 Starting Echo Voice Agent API...")
     await init_db()
     print("✅ Database initialized")
 

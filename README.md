@@ -1,68 +1,67 @@
-# SuperBryn Voice Agent - Backend
+# 🎙️ Echo Voice Agent - Backend
 
-A real-time AI voice agent backend built with FastAPI and LiveKit Agents for appointment booking.
+A real-time AI voice agent backend built with FastAPI and LiveKit Agents for appointment booking. Features natural conversation, visual avatar, and intelligent tool calling.
 
-## Features
+![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?logo=fastapi&logoColor=white)
+![LiveKit](https://img.shields.io/badge/LiveKit-Agents-purple)
 
-- **Voice Conversation**: Natural speech-to-text and text-to-speech using Deepgram and Cartesia
-- **AI-Powered**: OpenAI GPT-4o-mini for intelligent responses
-- **Real-time Avatar**: Beyond Presence integration for visual avatar with lip-sync
-- **Tool Calling**: 7 appointment management tools with direct database access
-- **Low Latency**: Optimized for <3 second response times
+## ✨ Features
 
-## Tech Stack
+| Feature | Description |
+|---------|-------------|
+| 🗣️ **Voice Conversation** | Natural speech-to-text and text-to-speech using Deepgram and Cartesia |
+| 🤖 **AI-Powered** | OpenAI GPT-4o-mini for intelligent responses and context awareness |
+| 👤 **Real-time Avatar** | Beyond Presence integration for visual avatar with lip-sync |
+| 🔧 **Tool Calling** | 7 appointment management tools with direct database access |
+| 💰 **Cost Tracking** | Estimates usage costs per call (STT, TTS, LLM, Avatar) |
+| 📊 **AI Summaries** | Auto-generated call summaries using GPT |
 
-- **Framework**: FastAPI + LiveKit Agents SDK
-- **STT**: Deepgram (nova-2-general)
-- **TTS**: Cartesia (sonic-2)
-- **LLM**: OpenAI (gpt-4o-mini)
-- **Avatar**: Beyond Presence
-- **Database**: PostgreSQL + SQLAlchemy
-- **Monitoring**: Logfire
+## 🛠️ Tech Stack
 
-## Prerequisites
+| Component | Technology |
+|-----------|------------|
+| **Framework** | FastAPI + LiveKit Agents SDK |
+| **STT** | Deepgram (nova-2-general) |
+| **TTS** | Cartesia (sonic-2, Maria voice) |
+| **LLM** | OpenAI (gpt-4o-mini) |
+| **Avatar** | Beyond Presence |
+| **Database** | PostgreSQL + SQLAlchemy |
+| **Monitoring** | Logfire |
+
+## 📋 Prerequisites
 
 - Python 3.11+
-- PostgreSQL database
-- API keys for: LiveKit, Deepgram, Cartesia, OpenAI, Beyond Presence
+- PostgreSQL database (Supabase, Neon, or local)
+- API keys for:
+  - [LiveKit](https://livekit.io/) - Voice infrastructure
+  - [Deepgram](https://deepgram.com/) - Speech-to-text
+  - [Cartesia](https://cartesia.ai/) - Text-to-speech
+  - [OpenAI](https://openai.com/) - LLM
+  - [Beyond Presence](https://beyondpresence.ai/) - Avatar
 
-## Installation
+## 🚀 Quick Start
 
-1. **Clone the repository**
+### 1. Clone & Install
 
-   ```bash
-   git clone <your-repo-url>
-   cd backend
-   ```
+```bash
+git clone https://github.com/jay-arora31/echo-backend
+cd echo-backend
 
-2. **Install UV (Python package manager)**
+# Install UV (fast Python package manager)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-   ```bash
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   ```
+# Install dependencies
+uv sync
+```
 
-3. **Install dependencies**
+### 2. Configure Environment
 
-   ```bash
-   uv sync
-   ```
+```bash
+cp .env.example .env
+```
 
-4. **Set up environment variables**
-
-   ```bash
-   cp .env.example .env
-   # Edit .env with your API keys
-   ```
-
-5. **Set up the database**
-
-   ```bash
-   # The database tables are created automatically on startup
-   ```
-
-## Configuration
-
-Create a `.env` file with the following variables:
+Edit `.env` with your API keys:
 
 ```env
 # Database
@@ -91,69 +90,64 @@ LOGFIRE_TOKEN=your_logfire_token
 
 # App
 APP_ENV=development
+DEBUG=true
 ```
 
-## Running Locally
-
-Start both the FastAPI server and LiveKit Agent worker:
+### 3. Run
 
 ```bash
 uv run start.py
 ```
 
-This will:
+This starts both:
 
-- Start FastAPI on `http://localhost:8000`
-- Start the LiveKit Voice Agent worker
-- Auto-reload on code changes
+- 🌐 FastAPI server on `http://localhost:8000`
+- 🎙️ LiveKit Voice Agent worker
 
-### Individual Services
+## 📡 API Reference
 
-**FastAPI only:**
+### Health & Status
 
-```bash
-uv run uvicorn app.main:app --reload --port 8000
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Health check |
+| `GET` | `/health` | Detailed health status |
 
-**Voice Agent only:**
+### Room Management
 
-```bash
-uv run python -c "import sys; sys.argv = ['agent', 'start']; from app.agent.voice_agent import run_agent; run_agent()"
-```
-
-## API Endpoints
-
-### Health & Info
-
-- `GET /` - Health check
-- `GET /health` - Detailed health status
-
-### LiveKit
-
-- `POST /api/livekit/room` - Create a new room
-- `POST /api/livekit/token` - Get access token
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/room/create` | Create a new LiveKit room |
+| `POST` | `/api/room/token` | Get access token for room |
+| `POST` | `/api/room/prewarm` | Pre-warm room with agent (faster connection) |
 
 ### Users
 
-- `POST /api/users/identify` - Identify/create user by phone
-- `GET /api/users/{user_id}` - Get user details
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/users/identify` | Identify/create user by phone |
+| `GET` | `/api/users/{user_id}` | Get user details |
 
 ### Appointments
 
-- `GET /api/appointments/slots` - Get available slots
-- `POST /api/appointments/` - Book appointment
-- `GET /api/appointments/user/{user_id}` - Get user's appointments
-- `PATCH /api/appointments/{id}` - Modify appointment
-- `DELETE /api/appointments/{id}` - Cancel appointment
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/appointments/slots` | Get available slots |
+| `POST` | `/api/appointments/` | Book appointment |
+| `GET` | `/api/appointments/user/{user_id}` | Get user's appointments |
+| `PATCH` | `/api/appointments/{id}` | Modify appointment |
+| `DELETE` | `/api/appointments/{id}` | Cancel appointment |
 
 ### Summaries
 
-- `POST /api/summaries/` - Save call summary
-- `GET /api/summaries/{session_id}` - Get summary
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/summaries/generate` | Generate AI summary with cost |
+| `GET` | `/api/summaries/session/{session_id}` | Get summary by session |
 
-## Voice Agent Tools
+## 🔧 Voice Agent Tools
 
-The agent has access to these tools:
+The AI agent can call these tools during conversation:
 
 | Tool | Description |
 |------|-------------|
@@ -162,74 +156,65 @@ The agent has access to these tools:
 | `get_availability` | Check available appointment slots |
 | `book_appointment` | Book an appointment |
 | `cancel_appointment` | Cancel an appointment |
-| `get_user_appointments` | Get user's appointments |
+| `modify_appointment` | Reschedule an appointment |
+| `get_appointments` | Get user's upcoming appointments |
 | `end_conversation` | End call and generate summary |
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 backend/
 ├── app/
 │   ├── agent/
-│   │   ├── voice_agent.py  # Main voice agent logic + tool definitions
+│   │   ├── voice_agent.py  # Main voice agent + tools
 │   │   └── prompts.py      # System prompts
 │   ├── api/
 │   │   ├── deps.py         # Dependency injection
-│   │   └── routes/
-│   │       ├── room.py         # LiveKit room endpoints
-│   │       ├── users.py        # User endpoints
-│   │       ├── appointments.py # Appointment endpoints
-│   │       └── summaries.py    # Summary endpoints
-│   ├── services/           # Business logic layer
-│   │   ├── user_service.py
-│   │   ├── appointment_service.py
-│   │   └── summary_service.py
+│   │   └── routes/         # API endpoints
+│   │       ├── room.py
+│   │       ├── users.py
+│   │       ├── appointments.py
+│   │       └── summaries.py
+│   ├── services/           # Business logic
 │   ├── models/             # SQLAlchemy models
 │   ├── schemas/            # Pydantic schemas
 │   ├── config.py           # Settings
 │   ├── database.py         # Database setup
 │   └── main.py             # FastAPI app
-├── alembic/                # Database migrations
 ├── start.py                # Entry point
 ├── pyproject.toml          # Dependencies
-├── render.yaml             # Render deployment config
 └── .env.example            # Environment template
 ```
 
-## Deployment
+## 🚀 Deployment
 
-### Render
+### Render / Railway
 
-1. Create a new Web Service on Render
-2. Connect your GitHub repo
-3. Set build command: `pip install uv && uv sync`
-4. Set start command: `uv run start.py`
-5. Add environment variables
+1. Connect your GitHub repo
+2. Set build command: `pip install uv && uv sync`
+3. Set start command: `uv run start.py`
+4. Add environment variables
 
-### Railway
+## ⚠️ Known Limitations
 
-1. Create new project from GitHub
-2. Add PostgreSQL database
-3. Set environment variables
-4. Deploy
+| Limitation | Details |
+|------------|---------|
+| **Avatar Cold Start** | Beyond Presence takes ~15-20 seconds on first connection |
+| **Single Worker** | LiveKit agent runs with 2 worker processes |
 
-### Docker
+## 📝 Environment Variables Reference
 
-```dockerfile
-FROM python:3.12-slim
-WORKDIR /app
-RUN pip install uv
-COPY . .
-RUN uv sync
-CMD ["uv", "run", "start.py"]
-```
-
-## Known Limitations
-
-1. **Avatar Cold Start**: Beyond Presence takes ~12-15 seconds on first connection
-2. **Slot Generation**: Slots are generated dynamically (9 AM - 5 PM, hourly)
-3. **Single Region**: LiveKit worker runs in one region
-
-## License
-
-MIT
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | ✅ | PostgreSQL connection string |
+| `LIVEKIT_URL` | ✅ | LiveKit Cloud WebSocket URL |
+| `LIVEKIT_API_KEY` | ✅ | LiveKit API key |
+| `LIVEKIT_API_SECRET` | ✅ | LiveKit API secret |
+| `DEEPGRAM_API_KEY` | ✅ | Deepgram STT API key |
+| `CARTESIA_API_KEY` | ✅ | Cartesia TTS API key |
+| `OPENAI_API_KEY` | ✅ | OpenAI API key |
+| `BEYOND_PRESENCE_API_KEY` | ✅ | Beyond Presence API key |
+| `BEYOND_PRESENCE_AVATAR_ID` | ✅ | Avatar ID from Beyond Presence |
+| `LOGFIRE_TOKEN` | ❌ | Logfire monitoring token |
+| `APP_ENV` | ❌ | Environment (development/production) |
+| `CORS_ORIGINS` | ❌ | Allowed CORS origins |
