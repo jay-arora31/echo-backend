@@ -26,13 +26,13 @@ A real-time AI voice agent backend built with FastAPI and LiveKit Agents for app
 | **TTS** | Cartesia (sonic-2, Maria voice) |
 | **LLM** | OpenAI (gpt-4o-mini) |
 | **Avatar** | Beyond Presence |
-| **Database** | PostgreSQL + SQLAlchemy |
+| **Database** | Supabase (PostgreSQL) + SQLAlchemy |
 | **Monitoring** | Logfire |
 
 ## 📋 Prerequisites
 
 - Python 3.11+
-- PostgreSQL database (Supabase, Neon, or local)
+- [Supabase](https://supabase.com/) database
 - API keys for:
   - [LiveKit](https://livekit.io/) - Voice infrastructure
   - [Deepgram](https://deepgram.com/) - Speech-to-text
@@ -65,7 +65,7 @@ Edit `.env` with your API keys:
 
 ```env
 # Database
-DATABASE_URL=postgresql+asyncpg://user:password@host:5432/dbname
+DATABASE_URL=postgresql+asyncpg://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
 
 # LiveKit
 LIVEKIT_URL=wss://your-project.livekit.cloud
