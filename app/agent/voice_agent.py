@@ -1162,65 +1162,64 @@ async def entrypoint(ctx: JobContext):
         
         # Check if Beyond Presence avatar is configured
         avatar_ready = False
+        
+        # Helper function for avatar video track detection
+        async def wait_for_avatar_video(avatar_keywords: list[str], timeout: float = 30.0):
+            """Wait for avatar video track to be available."""
+            avatar_video_ready = asyncio.Event()
+            
+            def check_identity(identity: str) -> bool:
+                identity_lower = identity.lower()
+                return any(kw in identity_lower for kw in avatar_keywords)
+            
+            def on_participant_connected(participant):
+                if check_identity(participant.identity):
+                    logger.info(f"Avatar participant connected: {participant.identity}")
+                    for pub in participant.track_publications.values():
+                        if pub.kind == rtc.TrackKind.KIND_VIDEO and pub.track:
+                            logger.info("Avatar video track already available!")
+                            avatar_video_ready.set()
+                            return
+            
+            def on_track_published(publication, participant):
+                if publication.kind == rtc.TrackKind.KIND_VIDEO and check_identity(participant.identity):
+                    logger.info(f"Avatar video track published by {participant.identity}")
+                    avatar_video_ready.set()
+            
+            def on_track_subscribed(track, publication, participant):
+                if track.kind == rtc.TrackKind.KIND_VIDEO and check_identity(participant.identity):
+                    logger.info(f"Avatar video track subscribed from {participant.identity}")
+                    avatar_video_ready.set()
+            
+            # Register event handlers
+            ctx.room.on("participant_connected", on_participant_connected)
+            ctx.room.on("track_published", on_track_published)
+            ctx.room.on("track_subscribed", on_track_subscribed)
+            
+            # Check existing participants
+            for participant in ctx.room.remote_participants.values():
+                if check_identity(participant.identity):
+                    logger.info(f"Avatar participant already in room: {participant.identity}")
+                    for pub in participant.track_publications.values():
+                        if pub.kind == rtc.TrackKind.KIND_VIDEO:
+                            logger.info("Avatar video track already available!")
+                            avatar_video_ready.set()
+                            break
+            
+            # Wait with timeout
+            try:
+                await asyncio.wait_for(avatar_video_ready.wait(), timeout=timeout)
+                return True
+            except asyncio.TimeoutError:
+                logger.warning(f"Timeout waiting for avatar video track ({timeout}s)")
+                return False
+        
+        # BEYOND PRESENCE AVATAR
         if settings.beyond_presence_api_key and settings.beyond_presence_avatar_id:
-            # Send "loading" status to frontend
             await send_avatar_status("loading", "Connecting to avatar...")
             log_timing("Starting Beyond Presence avatar...")
             
             try:
-                # Create an event to wait for avatar video track
-                avatar_video_ready = asyncio.Event()
-                avatar_participant_identity = None  # Will be set when avatar joins
-                
-                def on_participant_connected(participant):
-                    """Detect when avatar participant joins the room."""
-                    nonlocal avatar_participant_identity
-                    # Beyond Presence avatar typically has "avatar" or "bey" in identity
-                    identity = participant.identity.lower()
-                    if "avatar" in identity or "bey" in identity or "beyond" in identity:
-                        avatar_participant_identity = participant.identity
-                        logger.info(f"Avatar participant connected: {participant.identity}")
-                        # Check if video track already published
-                        for pub in participant.track_publications.values():
-                            if pub.kind == rtc.TrackKind.KIND_VIDEO and pub.track:
-                                logger.info("Avatar video track already available!")
-                                avatar_video_ready.set()
-                                return
-                
-                def on_track_published(publication, participant):
-                    """Detect when avatar publishes video track."""
-                    if publication.kind == rtc.TrackKind.KIND_VIDEO:
-                        identity = participant.identity.lower()
-                        if "avatar" in identity or "bey" in identity or "beyond" in identity:
-                            logger.info(f"Avatar video track published by {participant.identity}")
-                            avatar_video_ready.set()
-                
-                def on_track_subscribed(track, publication, participant):
-                    """Detect when avatar video track is subscribed."""
-                    if track.kind == rtc.TrackKind.KIND_VIDEO:
-                        identity = participant.identity.lower()
-                        if "avatar" in identity or "bey" in identity or "beyond" in identity:
-                            logger.info(f"Avatar video track subscribed from {participant.identity}")
-                            avatar_video_ready.set()
-                
-                # Register event handlers
-                ctx.room.on("participant_connected", on_participant_connected)
-                ctx.room.on("track_published", on_track_published)
-                ctx.room.on("track_subscribed", on_track_subscribed)
-                
-                # Check existing participants (avatar might already be connected)
-                for participant in ctx.room.remote_participants.values():
-                    identity = participant.identity.lower()
-                    if "avatar" in identity or "bey" in identity or "beyond" in identity:
-                        avatar_participant_identity = participant.identity
-                        logger.info(f"Avatar participant already in room: {participant.identity}")
-                        for pub in participant.track_publications.values():
-                            if pub.kind == rtc.TrackKind.KIND_VIDEO:
-                                logger.info("Avatar video track already available!")
-                                avatar_video_ready.set()
-                                break
-                
-                # Start the avatar session (this initiates the connection)
                 avatar_session = bey.AvatarSession(
                     api_key=settings.beyond_presence_api_key,
                     avatar_id=settings.beyond_presence_avatar_id,
@@ -1228,25 +1227,22 @@ async def entrypoint(ctx: JobContext):
                 await avatar_session.start(room=ctx.room, agent_session=session)
                 log_timing("Beyond Presence avatar session started, waiting for video track...")
                 
-                # Wait for avatar video track with timeout (max 30 seconds)
-                try:
-                    await asyncio.wait_for(avatar_video_ready.wait(), timeout=30.0)
+                # Wait for Beyond Presence avatar video track
+                if await wait_for_avatar_video(["avatar", "bey", "beyond"], timeout=30.0):
                     log_timing("✅ Avatar video track ready!")
                     avatar_ready = True
                     await send_avatar_status("ready", "Avatar connected!")
-                except asyncio.TimeoutError:
-                    logger.warning("Timeout waiting for avatar video track (30s)")
+                else:
                     log_timing("⚠️ Avatar timeout - continuing without video confirmation")
-                    # Still mark as ready since avatar session started
                     avatar_ready = True
                     await send_avatar_status("ready", "Avatar connected (video pending)")
-                
+                    
             except Exception as e:
                 logger.warning(f"Failed to start Beyond Presence avatar: {e}")
                 logger.info("Continuing without avatar...")
                 await send_avatar_status("failed", "Avatar unavailable")
         else:
-            log_timing("Beyond Presence avatar not configured (skipping)")
+            log_timing("No avatar configured (skipping)")
             await send_avatar_status("ready", "Connected!")
         
         # NOW send the greeting - after avatar is ready
@@ -1283,6 +1279,8 @@ def run_agent():
             api_key=settings.livekit_api_key,
             api_secret=settings.livekit_api_secret,
             ws_url=settings.livekit_url,
+            # Limit workers to avoid hitting Cartesia rate limits during development
+            num_idle_processes=2,
         )
     )
 

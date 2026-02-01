@@ -80,9 +80,11 @@ class GenerateSummaryRequest(BaseModel):
     room_name: str
     user_name: Optional[str] = None
     transcript: Optional[list[dict]] = None
+    messages: Optional[list[dict]] = None  # Alias for transcript (frontend uses 'messages')
     duration_seconds: Optional[int] = None
     appointments_booked: Optional[list[dict]] = None
     cost_tracking: Optional[CostTrackingData] = None
+    tool_calls: Optional[list[str]] = None  # Tools used during call
 
 
 class GenerateSummaryResponse(BaseModel):
@@ -102,12 +104,15 @@ async def generate_summary(request: GenerateSummaryRequest, db: DBSession):
     # Generate AI summary from transcript
     summary_text = "Call completed."
     
-    if request.transcript and len(request.transcript) > 0:
+    # Use transcript if provided, otherwise fall back to messages
+    conversation_data = request.transcript or request.messages
+    
+    if conversation_data and len(conversation_data) > 0:
         try:
             # Format transcript for summarization
             conversation_text = "\n".join([
                 f"{msg.get('role', 'unknown').capitalize()}: {msg.get('content', '')}" 
-                for msg in request.transcript[-20:]
+                for msg in conversation_data[-20:]
             ])
             
             # Call OpenAI for AI-generated summary
