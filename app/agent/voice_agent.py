@@ -1252,10 +1252,19 @@ async def entrypoint(ctx: JobContext):
         # This prevents the "disturbed" audio on the first message
         await asyncio.sleep(0.5)
         
+        # Check if user disconnected during avatar loading/delay
+        if shutdown_event.is_set():
+            log_timing("User disconnected before greeting - skipping")
+            return
+        
         greeting = "Hi there! How can I help you today?"
         logfire.info("tts_greeting_start", message=greeting)
-        speech_handle = session.say(greeting, allow_interruptions=True)
-        log_timing("Greeting queued (TTS runs in background)")
+        try:
+            speech_handle = session.say(greeting, allow_interruptions=True)
+            log_timing("Greeting queued (TTS runs in background)")
+        except RuntimeError as e:
+            logger.warning(f"Could not send greeting (session may have ended): {e}")
+            return
         
         # Keep running until disconnect
         log_timing("Agent running - listening for user input...")
