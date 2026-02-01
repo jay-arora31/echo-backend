@@ -145,15 +145,6 @@ backend/
 └── .env.example            # Environment template
 ```
 
-## 🚀 Deployment
-
-### Render / Railway
-
-1. Connect your GitHub repo
-2. Set build command: `pip install uv && uv sync`
-3. Set start command: `uv run start.py`
-4. Add environment variables
-
 ## ⚠️ Known Limitations
 
 | Limitation | Details |
