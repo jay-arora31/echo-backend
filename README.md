@@ -104,47 +104,6 @@ This starts both:
 - 🌐 FastAPI server on `http://localhost:8000`
 - 🎙️ LiveKit Voice Agent worker
 
-## 📡 API Reference
-
-### Health & Status
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/` | Health check |
-| `GET` | `/health` | Detailed health status |
-
-### Room Management
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/room/create` | Create a new LiveKit room |
-| `POST` | `/api/room/token` | Get access token for room |
-| `POST` | `/api/room/prewarm` | Pre-warm room with agent (faster connection) |
-
-### Users
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/users/identify` | Identify/create user by phone |
-| `GET` | `/api/users/{user_id}` | Get user details |
-
-### Appointments
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/appointments/slots` | Get available slots |
-| `POST` | `/api/appointments/` | Book appointment |
-| `GET` | `/api/appointments/user/{user_id}` | Get user's appointments |
-| `PATCH` | `/api/appointments/{id}` | Modify appointment |
-| `DELETE` | `/api/appointments/{id}` | Cancel appointment |
-
-### Summaries
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/summaries/generate` | Generate AI summary with cost |
-| `GET` | `/api/summaries/session/{session_id}` | Get summary by session |
-
 ## 🔧 Voice Agent Tools
 
 The AI agent can call these tools during conversation:
