@@ -93,7 +93,15 @@ APP_ENV=development
 DEBUG=true
 ```
 
-### 3. Run
+### 3. Setup Database
+
+Run Alembic migrations to create tables in your Supabase database:
+
+```bash
+uv run alembic upgrade head
+```
+
+### 4. Run
 
 ```bash
 uv run start.py
