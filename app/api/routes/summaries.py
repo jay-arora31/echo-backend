@@ -56,6 +56,49 @@ import openai
 from app.config import settings
 
 
+# Pricing constants (copied from voice_agent to avoid importing heavy LiveKit dependencies)
+PRICING = {
+    "deepgram_per_min": 0.0043,           # Nova-2 Pay-as-you-go
+    "cartesia_per_1k_chars": 0.099,       # Sonic TTS
+    "openai_input_per_1m": 0.15,          # GPT-4o-mini input
+    "openai_output_per_1m": 0.60,         # GPT-4o-mini output
+    "avatar_per_min": 0.03,               # Beyond Presence estimate
+}
+
+
+def calculate_call_cost(cost_tracking: dict) -> dict:
+    """Calculate estimated cost breakdown from usage metrics."""
+    stt_minutes = cost_tracking.get("stt_seconds", 0) / 60
+    tts_chars = cost_tracking.get("tts_characters", 0)
+    llm_input = cost_tracking.get("llm_input_tokens", 0)
+    llm_output = cost_tracking.get("llm_output_tokens", 0)
+    avatar_minutes = cost_tracking.get("avatar_seconds", 0) / 60
+    
+    stt_cost = stt_minutes * PRICING["deepgram_per_min"]
+    tts_cost = (tts_chars / 1000) * PRICING["cartesia_per_1k_chars"]
+    llm_input_cost = (llm_input / 1_000_000) * PRICING["openai_input_per_1m"]
+    llm_output_cost = (llm_output / 1_000_000) * PRICING["openai_output_per_1m"]
+    llm_cost = llm_input_cost + llm_output_cost
+    avatar_cost = avatar_minutes * PRICING["avatar_per_min"]
+    
+    total_cost = stt_cost + tts_cost + llm_cost + avatar_cost
+    
+    return {
+        "deepgram_stt": round(stt_cost, 6),
+        "cartesia_tts": round(tts_cost, 6),
+        "openai_llm": round(llm_cost, 6),
+        "beyond_presence_avatar": round(avatar_cost, 6),
+        "total": round(total_cost, 6),
+        "usage": {
+            "stt_minutes": round(stt_minutes, 2),
+            "tts_characters": tts_chars,
+            "llm_input_tokens": llm_input,
+            "llm_output_tokens": llm_output,
+            "avatar_minutes": round(avatar_minutes, 2),
+        }
+    }
+
+
 class CostTrackingData(BaseModel):
     """Usage metrics from the call."""
     stt_seconds: float = 0.0
@@ -148,12 +191,10 @@ Keep it to 2-3 sentences max. Be specific about dates and times mentioned."""
     # Calculate cost breakdown
     cost_breakdown = None
     if request.cost_tracking:
-        from app.agent.voice_agent import calculate_call_cost
         cost_data = calculate_call_cost(request.cost_tracking.model_dump())
         cost_breakdown = CostBreakdown(**cost_data)
     elif request.duration_seconds:
         # Fallback estimation based on duration
-        from app.agent.voice_agent import calculate_call_cost
         estimated_tracking = {
             "stt_seconds": request.duration_seconds * 0.4,  # ~40% user speaking
             "tts_characters": request.duration_seconds * 15,  # ~15 chars/sec avg
